@@ -1,7 +1,7 @@
 
 import torch.nn.functional as F
 
-def bbmv(x, cA, K):
+def logbbmv(x, cA, K):
     K1K = 2 * K + 1
     padded_x = F.pad(x, (K, K), value=float("-inf"))
     unfolded_x = padded_x.unfold(-1, K1K, 1)
@@ -18,7 +18,7 @@ def clone_and_zero_grads(params):
     return grads
 
 def run_inference(text, params, inference_fn):
-    evidence = inference_fn(text, *params)
+    evidence, alpha = inference_fn(text, *params)
     evidence.sum().backward()
     grads = clone_and_zero_grads(params)
     return evidence.detach(), grads
