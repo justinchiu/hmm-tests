@@ -56,10 +56,25 @@ def evidence_fastbmm(
     N, T = text.shape
     C, K = col_banded_transition.shape
 
+    full_start = torch.cuda.Event(enable_timing=True)
+    full_end = torch.cuda.Event(enable_timing=True)
+    full_start.record()
+
+    startt = torch.cuda.Event(enable_timing=True)
+    endt = torch.cuda.Event(enable_timing=True)
+    startt.record()
     row_banded_transition = BandedMatrix(
         col_banded_transition[None], K // 2, K // 2,
-        fill = float("-inf")
+        fill = float("-inf"),
     ).transpose().data[0]
+    endt.record()
+    torch.cuda.synchronize()
+    print(f"time for first trans {startt.elapsed_time(endt)}")
+
+    startt = torch.cuda.Event(enable_timing=True)
+    endt = torch.cuda.Event(enable_timing=True)
+
+    startt.record()
 
     log_phi_start = start_emb @ projection
     log_phi_w = state_emb @ projection
@@ -73,16 +88,28 @@ def evidence_fastbmm(
     # O(CD)
     normed_log_phi_w = log_phi_w - log_denominator[:,None]
 
+    endt.record()
+    torch.cuda.synchronize()
+    print(f"time for kernel stuff {startt.elapsed_time(endt)}")
+
+    startt = torch.cuda.Event(enable_timing=True)
+    endt = torch.cuda.Event(enable_timing=True)
+    startt.record()
+
     normed_banded_transition = row_banded_transition - log_denominator[:,None]
     normed_col_banded_transition = BandedMatrix(
         normed_banded_transition[None],
         K // 2, K // 2,
         fill = float("-inf"),
+        #fill = -1e5,
     ).transpose().data[0]
 
     normalized_phi_w = normed_log_phi_w.exp()
     phi_u = log_phi_u.exp()
 
+    endt.record()
+    torch.cuda.synchronize()
+    print(f"time for second transpose {startt.elapsed_time(endt)}")
     """
     # DBG
     cls_banded_transition = BandedMatrix(
@@ -108,6 +135,9 @@ def evidence_fastbmm(
     ).to_dense()[0]
     """
 
+    startt = torch.cuda.Event(enable_timing=True)
+    endt = torch.cuda.Event(enable_timing=True)
+    startt.record()
     # gather emission
     # N x T x C
     p_emit = emission[
@@ -127,7 +157,7 @@ def evidence_fastbmm(
         alpha_un = (gamma @ phi_u.T).log()
 
         log_band_alpha = logbbmv(log_alpha, normed_col_banded_transition, K // 2)
-        alpha_un1 = alpha_un.logaddexp(log_band_alpha)
+        alpha_un = alpha_un.logaddexp(log_band_alpha)
 
         #log_band_alpha2 = (log_alpha[:,:,None] + log_dense_banded_transition[None]).logsumexp(1)
         #alpha_un2 = alpha_un.logaddexp(log_band_alpha2)
@@ -146,4 +176,12 @@ def evidence_fastbmm(
     # return correct alphas by indexing in using lengths.
     #return O, alphas
     evidence = O.sum(-1) # mask here.
+
+    endt.record()
+    torch.cuda.synchronize()
+    print(f"time for inference {startt.elapsed_time(endt)}")
+
+    full_end.record()
+    torch.cuda.synchronize()
+    print(f"total time {full_start.elapsed_time(full_end)}")
     return evidence, alpha

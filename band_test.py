@@ -44,7 +44,7 @@ next_state_emb = torch.randn(C, H, device=device)
 preterminal_emb = torch.randn(C, H, device=device)
 terminal_emb = torch.randn(V, H, device=device)
 projection = torch.randn(H, D, device=device)
-col_banded_transition = torch.randn(C, K1K, device=device)
+col_banded_transition = torch.randn(C, K1K, device=device) + 10
 
 start_emb.requires_grad = True
 state_emb.requires_grad = True
@@ -72,10 +72,11 @@ print(lengths)
 print("BAND HMM")
 
 print("torch struct inference")
-evidence, grads = run_inference(text, params, inference.evidence_ts)
+evidence, grads0 = run_inference(text, params, inference.evidence_ts)
 print(evidence)
 
 print("fastbmm inference")
 evidence, grads = run_inference(text, params, inference.evidence_fastbmm)
 print(evidence)
 
+import pdb; pdb.set_trace()

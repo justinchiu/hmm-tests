@@ -13,7 +13,7 @@ def zero_grads(params):
         param.grad.zero_()
 
 def clone_and_zero_grads(params):
-    grads = (param.grad.detach().clone() for param in params)
+    grads = tuple(param.grad.detach().clone() for param in params)
     zero_grads(params)
     return grads
 
@@ -23,4 +23,4 @@ def run_inference(text, params, inference_fn):
     grads = clone_and_zero_grads(params)
     return evidence.detach(), grads
 
-
+#def 
