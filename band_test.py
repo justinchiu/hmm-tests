@@ -70,7 +70,6 @@ print(text)
 print(lengths)
 
 print("BAND HMM")
-
 print("torch struct inference")
 evidence, grads0 = run_inference(text, params, inference.evidence_ts)
 print(evidence)
@@ -78,5 +77,23 @@ print(evidence)
 print("fastbmm inference")
 evidence, grads = run_inference(text, params, inference.evidence_fastbmm)
 print(evidence)
+
+print("fastbmm2 inference")
+evidence, grads = run_inference(text, params, inference.evidence_fastbmm2)
+print(evidence)
+
+import pdb; pdb.set_trace()
+
+import product_banded_inference as inference
+
+print("PROD BAND HMM")
+print("torch struct inference")
+evidence, grads0 = run_inference(text, params, inference.evidence_ts)
+print(evidence)
+
+print("fastbmm inference")
+evidence, grads = run_inference(text, params, inference.evidence_fastbmm)
+print(evidence)
+
 
 import pdb; pdb.set_trace()
