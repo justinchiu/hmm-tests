@@ -28,14 +28,15 @@ np.random.seed(1234)
 random.seed(1234)
 
 N = 3 # batch size
-T = 32 # length of sequence
+T = 5 # length of sequence
 V = 128 # vocab size
 
-C = 256 # number of classes
-H = 128 # embedding dimension
-D = 64 # number of samples / projection dim
+C = 32 # number of classes
+H = 16 # embedding dimension
+D = 8 # number of samples / projection dim
 
-K = 8 # band size
+K = 2 # band size
+K1K = 2 * K + 1
 
 start_emb = torch.randn(H, device=device)
 state_emb = torch.randn(C, H, device=device)
@@ -43,7 +44,7 @@ next_state_emb = torch.randn(C, H, device=device)
 preterminal_emb = torch.randn(C, H, device=device)
 terminal_emb = torch.randn(V, H, device=device)
 projection = torch.randn(H, D, device=device)
-banded_transition = torch.randn(C, K+1, device=device)
+col_banded_transition = torch.randn(C, K1K, device=device) + 10
 
 start_emb.requires_grad = True
 state_emb.requires_grad = True
@@ -51,13 +52,12 @@ next_state_emb.requires_grad = True
 preterminal_emb.requires_grad = True
 terminal_emb.requires_grad = True
 projection.requires_grad = True
-banded_transition.requires_grad = True
-
+col_banded_transition.requires_grad = True
 
 params = (
     start_emb, state_emb, next_state_emb, projection,
     preterminal_emb, terminal_emb,
-    banded_transition,
+    col_banded_transition,
 )
 
 # from_numpy api seems bad
@@ -70,12 +70,30 @@ print(text)
 print(lengths)
 
 print("BAND HMM")
-
 print("torch struct inference")
-evidence, grads = run_inference(text, params, inference.evidence_ts)
+evidence, grads0 = run_inference(text, params, inference.evidence_ts)
 print(evidence)
 
 print("fastbmm inference")
 evidence, grads = run_inference(text, params, inference.evidence_fastbmm)
 print(evidence)
 
+print("fastbmm2 inference")
+evidence, grads = run_inference(text, params, inference.evidence_fastbmm2)
+print(evidence)
+
+import pdb; pdb.set_trace()
+
+import product_banded_inference as inference
+
+print("PROD BAND HMM")
+print("torch struct inference")
+evidence, grads0 = run_inference(text, params, inference.evidence_ts)
+print(evidence)
+
+print("fastbmm inference")
+evidence, grads = run_inference(text, params, inference.evidence_fastbmm)
+print(evidence)
+
+
+import pdb; pdb.set_trace()

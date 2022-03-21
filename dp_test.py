@@ -66,22 +66,23 @@ print(lengths)
 print("STANDARD HMM")
 
 print("torch struct inference")
-evidence, grads = run_inference(text, params, inference.evidence_ts)
+evidence, grads_ts = run_inference(text, params, inference.evidence_ts)
 print(evidence)
 
 print("loop inference")
-evidence, grads = run_inference(text, params, inference.evidence_loop)
+evidence, grads_loop = run_inference(text, params, inference.evidence_loop)
 print(evidence)
 
 print("loopbmm inference")
-evidence, grads = run_inference(text, params, inference.evidence_loopbmm)
+evidence, grads_loopbmm = run_inference(text, params, inference.evidence_loopbmm)
 print(evidence)
 
 print("fast inference")
-evidence, grads = run_inference(text, params, inference.evidence_fast)
+evidence, grads_fast = run_inference(text, params, inference.evidence_fast)
 print(evidence)
 
 print("fastbmm inference")
-evidence, grads = run_inference(text, params, inference.evidence_fastbmm)
+evidence, grads_fastbmm = run_inference(text, params, inference.evidence_fastbmm)
 print(evidence)
+
 
